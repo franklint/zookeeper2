@@ -12,5 +12,13 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/franklint/zookeeper2.git"
+  },
+  "bugs": {
+    "url": "https://github.com/franklint/zookeeper2/issues"
+  },
+  "homepage": "https://github.com/franklint/zookeeper2#readme"
 }
