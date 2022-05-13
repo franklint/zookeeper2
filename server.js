@@ -1,8 +1,11 @@
 const express = require('express'); 
-const {animals} = require('./data/animals') 
+const {animals} = require('./data/animals'); 
+const fs = require('fs'); 
+const path = require('path'); 
 
 const PORT = process.env.PORT || 3001; 
 
+//sets the app top express.js 
 const app = express(); 
 
 function filterByQuery(query, animalsArray) {
@@ -44,6 +47,41 @@ function filterByQuery(query, animalsArray) {
   return filteredResults;
 }
 
+function findById(id, animalsArray){
+    const result = animalsArray.filter(animal=> animal.id === id)[0]; 
+    return result; 
+}
+
+//this function explains what will happen for the route callback post method 
+function createNewAnimal(body, animalsArray){
+   const animal = body; 
+   animalsArray.push(animal); 
+
+   fs.writeFileSync(
+       path.join(__dirname, './data/animals.json'), 
+       JSON.stringify({animals: animalsArray}, null, 2)
+   ); 
+   return animal; 
+}
+
+function validateAnimal(animal){
+    if(!animal.name || typeof animal.name !== 'string'){
+        return false;
+    }
+    if (!animal.species || typeof animal.species !== 'string'){
+        return false; 
+    }
+    if(!animal.diet || typeof animal.diet !== 'string'){
+        return false; 
+    }
+    if(!animal.personalityTraits || !Array.isArray(animal.personalityTraits)){
+        return false; 
+    }
+
+    return true; 
+}
+
+//get is considered to be a route 
 app.get('/api/animals', (req, res)=>{
     let results = animals; 
     console.log(req.query); 
@@ -51,6 +89,38 @@ app.get('/api/animals', (req, res)=>{
         results = filterByQuery(req.query, results); 
     }
     res.json(results); 
+}); 
+
+
+app.get('/api/animals/:id', (req, res) => {
+    const result = findById(req.params.id, animals); 
+    if(result){
+        res.json(result)
+    } else {
+        res.send(404); 
+    }
+});
+
+//app.use must come before app.post
+//parse incoming string or array data 
+app.use(express.urlencoded({extended: true})); 
+
+//parse incoming json data 
+app.use(express.json()); 
+
+
+app.post('/api/animals', (req, res) => {
+    //req.body is where our incoming content will be 
+   // console.log(req.body); 
+   req.body.id = animals.length.toString(); 
+
+   //if any data in req.body is incorrect, send 400 erro back 
+   if(!validateAnimal(req.body)){
+       res.status(400).send('The animal is not properly formatted.'); 
+   } else {
+       const animal = createNewAnimal(req.body, animals); 
+       res.json(animal); 
+   }
 }); 
 
 
